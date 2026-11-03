@@ -362,7 +362,8 @@
       });
       function paint() {
         cfg.nodes.forEach(n => {
-          circles[n.id].setAttribute('fill', col[n.id] === undefined ? 'var(--card)' : cfg.colors[col[n.id]].css);
+          circles[n.id].style.fill = col[n.id] === undefined ? '' : cfg.colors[col[n.id]].css;
+          circles[n.id].parentNode.classList.toggle('colored', col[n.id] !== undefined);
         });
       }
       const legend = h('div', { class: 'legend' }, cfg.colors.map(c => h('span', { class: 'swatch' }, h('i', { style: { background: c.css } }), c.name)));

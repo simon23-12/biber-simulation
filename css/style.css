@@ -223,6 +223,7 @@ pre.map { letter-spacing: .35em; font-size: 1.2rem; line-height: 1.4; display: i
 .graph .node.clickable:hover circle { stroke: var(--accent); }
 .graph .node.picked circle { stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 22%, var(--card)); }
 .graph .ntext { font: 700 15px inherit; fill: var(--ink); text-anchor: middle; pointer-events: none; }
+.graph .node.colored .ntext { fill: #2b2118; }
 .graph .badge { font: 800 14px inherit; fill: var(--accent); text-transform: none; background: none; }
 .legend { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; font-weight: 600; }
 .swatch i { display: inline-block; width: 16px; height: 16px; border-radius: 50%; margin-right: 6px; vertical-align: -2px; border: 2px solid var(--brown); }
