@@ -304,23 +304,40 @@
         for (let i = 0; i < cfg.wires; i++) for (let j = i + 1; j < cfg.wires; j++)
           sel.append(h('option', { value: i + '-' + j }, `Leitung ${i + 1} ↔ ${j + 1}`));
         sel.value = comps[k] || '';
-        sel.addEventListener('change', () => { comps[k] = sel.value; drawNet(); testRun(); ctx.set(comps.slice()); });
+        sel.addEventListener('change', () => { comps[k] = sel.value; drawNet(); result.innerHTML = ''; ctx.set(comps.slice()); });
         selects.append(h('label', { class: 'slot' }, h('span', null, 'Baustein ' + (k + 1)), sel));
       }
       const input = h('input', { type: 'text', class: 'answer-input', value: '4 2 3 1', 'aria-label': 'Testzahlen' });
-      const result = h('span', { class: 'mono' });
+      const result = h('div', { class: 'nettrace', 'aria-live': 'polite' });
       function testRun() {
+        result.innerHTML = '';
         const v = input.value.split(/[\s,;]+/).filter(Boolean).map(Number);
-        if (v.length !== cfg.wires || v.some(isNaN)) { result.textContent = `Gib genau ${cfg.wires} Zahlen ein.`; return; }
-        const c = comps.map(x => x ? x.split('-').map(Number) : null);
-        result.textContent = A.netRun(v, c).join('  ');
+        if (v.length !== cfg.wires || v.some(isNaN)) { result.append(h('p', { class: 'robot-msg' }, `Gib genau ${cfg.wires} Zahlen ein, getrennt durch Leerzeichen.`)); return; }
+        const table = h('table', { class: 'trace' }, h('tr', null, h('th', null, 'Schritt'), h('th', null, 'Zahlen auf den Leitungen (oben → unten)')));
+        let cur = v.slice();
+        table.append(h('tr', null, h('td', null, 'Eingabe'), h('td', { class: 'mono' }, cur.join('  '))));
+        comps.forEach((x, k) => {
+          if (!x) return;
+          const [i, j] = x.split('-').map(Number);
+          cur = A.netRun(cur, [[i, j]]);
+          table.append(h('tr', null, h('td', null, `Baustein ${k + 1} (${i + 1} ↔ ${j + 1})`), h('td', { class: 'mono' }, cur.join('  '))));
+        });
+        result.append(table, h('p', { class: 'robot-msg' }, 'Ausgabe: ' + cur.join('  ')));
       }
-      input.addEventListener('input', testRun);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') testRun(); });
+      const randomTest = () => {
+        const pool = []; while (pool.length < cfg.wires) { const n = 1 + Math.floor(Math.random() * 9); if (!pool.includes(n)) pool.push(n); }
+        input.value = pool.join(' '); testRun();
+      };
       root.append(
         h('p', { class: 'hint' }, 'Jeder Baustein vergleicht zwei Leitungen: Die kleinere Zahl wandert auf die obere, die größere auf die untere Leitung. Die Bausteine werden von links nach rechts der Reihe nach durchlaufen.'),
         svg, selects,
-        h('div', { class: 'nettest' }, h('strong', null, 'Probiere es aus: '), input, h('span', null, ' → Ausgabe oben nach unten: '), result));
-      drawNet(); testRun();
+        h('div', { class: 'nettest' }, h('strong', null, 'Probiere es aus: '), input,
+          h('button', { type: 'button', class: 'btn small primary', onclick: testRun }, '▶ Testen'),
+          h('button', { type: 'button', class: 'btn small', onclick: randomTest }, '🎲 Andere Zahlen')),
+        result);
+      drawNet();
+      if (ctx.review) testRun();
     },
   };
 
