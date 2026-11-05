@@ -50,7 +50,7 @@
   const flow = A.maxflow(fE.map(e => e.slice(0, 3)), 'S', 'T');
 
   /* --- Aufgabe 12: Baum --- */
-  const tN = [['A', 200, 40], ['B', 110, 105], ['C', 290, 105], ['D', 60, 175], ['E', 160, 175], ['F', 320, 175], ['G', 120, 240], ['H', 350, 240]].map(([id, x, y]) => ({ id, x, y }));
+  const tN = [['A', 200, 40], ['B', 110, 105], ['C', 290, 105], ['D', 60, 175], ['E', 160, 175], ['F', 320, 175], ['G', 120, 240], ['H', 350, 240]].map(([id, x, y]) => ({ id, label: id, x, y }));
   const kids = { A: ['B', 'C'], B: ['D', 'E'], E: ['G', null], C: [null, 'F'], F: [null, 'H'] };
   const tEdges = []; Object.entries(kids).forEach(([p, c]) => c.forEach(x => x && tEdges.push([p, x])));
   const post = n => n ? (kids[n] || [null, null]).flatMap(post).concat(n) : [];
@@ -202,7 +202,8 @@ für i von 1 bis 10:
     wenn es einen linken Nachfolger gibt:  besuche(linker Nachfolger)
     wenn es einen rechten Nachfolger gibt: besuche(rechter Nachfolger)
     schreibe den Namen des Knotens auf</pre>
-               <p>Er beginnt bei A. Ein Nachfolger links unterhalb eines Knotens ist der <i>linke</i>, rechts unterhalb der <i>rechte</i> Nachfolger.</p>
+               <p>Er beginnt bei A. Ein Nachfolger links unterhalb eines Knotens ist der <i>linke</i>, rechts unterhalb der <i>rechte</i> Nachfolger. „besuche(linker Nachfolger)“ heißt: Der Biber geht dorthin und führt für diesen Knoten <b>dieselbe Regel</b> von oben nach unten aus, bevor er beim ursprünglichen Knoten weitermacht.</p>
+               <p><b>Kleines Beispiel:</b> Hat ein Knoten X nur die Nachfolger Y (links) und Z (rechts) und beide keine weiteren Nachfolger, schreibt der Biber bei <span class="mono">besuche(X)</span> auf: <span class="mono">Y, Z, X</span>.</p>
                <p>Klicke die Knoten in der Reihenfolge an, in der der Biber ihre Namen aufschreibt.</p>`,
         widget: { type: 'seqclick', w: 420, h: 280, nodes: tN, edges: tEdges, correct: postorder },
         explain: `<p>Die Regel schreibt einen Knoten erst auf, nachdem <b>beide Teilbäume</b> besucht wurden („Postorder“). Links von A: D, dann G, E, B. Rechts von A: H, F, C. Zuletzt A. Die Reihenfolge lautet: <b>${postorder.join(' – ')}</b>.</p>`,
