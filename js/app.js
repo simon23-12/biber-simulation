@@ -7,6 +7,7 @@
   const POINTS = { 1: 6, 2: 9, 3: 12 };
   const LEVEL = { 1: 'leicht', 2: 'mittel', 3: 'schwer' };
   const KEY = 'fuhs-biber-simulation-v1';
+  const GRADES = [6, 9];
   const app = document.getElementById('app');
   const val = x => (typeof x === 'function' ? x() : x);
 
@@ -18,6 +19,8 @@
   const save = () => { try { localStorage.setItem(KEY, JSON.stringify(db)); } catch (e) { /* ignorieren */ } };
   const st = id => (db.contests[id] = db.contests[id] || { status: 'idle', history: [] });
   const contestById = id => B.contests.find(c => c.id === id);
+  const gradeOf = c => c.grade || 9;
+  const ctitle = c => `Klasse ${gradeOf(c)} · ${c.title}`;
   const maxPoints = c => c.tasks.reduce((t, k) => t + POINTS[k.level], 0);
   const fmt = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
   const remaining = s => DURATION - (Date.now() - s.startedAt);
@@ -63,22 +66,33 @@
   }
 
   /* ---------- Startseite ---------- */
+  function currentGrade() {
+    if (GRADES.includes(db.grade)) return db.grade;
+    const run = B.contests.find(c => st(c.id).status === 'running');
+    return run ? gradeOf(run) : 9;
+  }
+
   function home() {
     stopTimer();
     app.innerHTML = '';
     const running = B.contests.filter(c => st(c.id).status === 'running');
+    const grade = currentGrade();
+    const list = B.contests.filter(c => gradeOf(c) === grade);
+    const nTasks = list[0].tasks.length, nPoints = maxPoints(list[0]);
     app.append(
       h('header', { class: 'hero' },
         h('div', { class: 'hero-text' },
-          h('p', { class: 'eyebrow' }, 'Klassenstufe 9 · Informatik-Wettbewerb zum Üben'),
+          h('p', { class: 'eyebrow' }, `Klassenstufe ${grade} · Informatik-Wettbewerb zum Üben`),
           h('h1', null, 'Herr Fuhs’ großartige Biber Simulation'),
-          h('p', { class: 'lead' }, 'Drei Wettbewerbe im Stil des Informatik-Bibers. Jeder hat 12 Aufgaben, die leicht beginnen und zum Schluss richtig knifflig werden. Du hast pro Wettbewerb 35 Minuten – danach gibt es Punkte und alle Lösungen.'),
-          h('ul', { class: 'chips' }, ['⏱ 35 Minuten', '🧩 12 Aufgaben', '🎯 108 Punkte', '💾 nur lokal gespeichert'].map(t => h('li', null, t)))),
+          h('p', { class: 'lead' }, `Drei Wettbewerbe im Stil des Informatik-Bibers. Jeder hat ${nTasks} Aufgaben, die leicht beginnen und zum Schluss richtig knifflig werden. Du hast pro Wettbewerb 35 Minuten – danach gibt es Punkte und alle Lösungen.`),
+          h('div', { class: 'grades', role: 'group', 'aria-label': 'Klassenstufe wählen' },
+            GRADES.map(g => h('button', { type: 'button', 'aria-pressed': String(g === grade), onclick: () => { db.grade = g; save(); home(); } }, `Klasse ${g}`))),
+          h('ul', { class: 'chips' }, ['⏱ 35 Minuten', `🧩 ${nTasks} Aufgaben`, `🎯 ${nPoints} Punkte`, '💾 nur lokal gespeichert'].map(t => h('li', null, t)))),
         h('figure', { class: 'hero-img' }, h('img', { src: 'assets/biber.webp', alt: 'Ein erstaunt blickender Biber mit weit aufgerissenen Augen', width: 498, height: 544 }))));
 
     if (running.length) {
       const c = running[0];
-      app.append(h('div', { class: 'banner' }, h('span', null, `⏳ „${c.title}“ läuft noch – Restzeit ${fmt(remaining(st(c.id)))}.`),
+      app.append(h('div', { class: 'banner' }, h('span', null, `⏳ „${ctitle(c)}“ läuft noch – Restzeit ${fmt(remaining(st(c.id)))}.`),
         h('button', { class: 'btn primary', onclick: () => contest(c.id) }, 'Weitermachen')));
     }
 
@@ -92,7 +106,7 @@
         h('li', null, 'Tipp: Fang mit den leichten Aufgaben an. Die schweren stehen am Ende jedes Wettbewerbs.'))));
 
     const grid = h('div', { class: 'cards' });
-    B.contests.forEach((c, i) => {
+    list.forEach((c, i) => {
       const s = st(c.id), best = (s.history || []).reduce((m, r) => Math.max(m, r.score), -1);
       let action, status;
       if (s.status === 'running') {
@@ -134,7 +148,7 @@
   async function start(id, again) {
     const c = contestById(id);
     const ok = await dialog({
-      title: `${c.title} starten?`,
+      title: `${ctitle(c)} starten?`,
       body: `<p>Sobald du startest, hast du <b>35 Minuten</b> Zeit für ${c.tasks.length} Aufgaben. Die Uhr läuft weiter, auch wenn du die Seite schließt.</p>` +
         (again ? '<p>Dein bisheriges Ergebnis bleibt in der Bestwert-Anzeige erhalten.</p>' : '') + '<p>Bereit?</p>',
       ok: 'Los geht’s!', cancel: 'Noch nicht',
@@ -159,7 +173,7 @@
     const foot = h('div', { class: 'taskfoot' });
     app.append(
       h('div', { class: 'topbar' },
-        h('div', { class: 'topbar-in' }, h('strong', null, c.title), timerEl,
+        h('div', { class: 'topbar-in' }, h('strong', null, ctitle(c)), timerEl,
           h('button', { class: 'btn danger small', onclick: submit }, 'Abgeben')), bar),
       nav, card, foot);
 
@@ -251,7 +265,7 @@
       h('section', { class: 'card summary' },
         h('div', { class: 'ring', style: { '--pct': pct } }, h('b', null, String(r.score)), h('small', null, 'von ' + r.max)),
         h('div', { class: 'summary-text' },
-          h('p', { class: 'eyebrow' }, c.title + ' · ' + c.subtitle),
+          h('p', { class: 'eyebrow' }, ctitle(c) + ' · ' + c.subtitle),
           h('h1', null, `${icon} ${title}`), h('p', { class: 'lead' }, line),
           h('p', null, `${right} von ${c.tasks.length} Aufgaben richtig · ${pct} % · benötigte Zeit ${mins} min ${secs} s`),
           h('ul', { class: 'levels', html: byLevel }),

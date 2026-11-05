@@ -384,7 +384,7 @@
         });
       }
       const legend = h('div', { class: 'legend' }, cfg.colors.map(c => h('span', { class: 'swatch' }, h('i', { style: { background: c.css } }), c.name)));
-      root.append(h('p', { class: 'hint' }, 'Klicke mehrfach auf einen Kreis, um ihm einen Tag zuzuweisen (oder die Zuweisung zu löschen).'), svg, legend);
+      root.append(h('p', { class: 'hint' }, 'Klicke mehrfach auf einen Kreis, um ihm ' + (cfg.hint || 'einen Tag') + ' zuzuweisen (oder die Zuweisung zu löschen).'), svg, legend);
       paint();
     },
   };

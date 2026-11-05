@@ -1,11 +1,12 @@
 # Herr Fuhs’ großartige Biber Simulation
 
-Drei Wettbewerbe im Stil des [Informatik-Bibers](https://bwinf.de/biber/) für Klassenstufe 9.
+Wettbewerbe im Stil des [Informatik-Bibers](https://bwinf.de/biber/) für die Klassenstufen 6 und 9 (Umschalter auf der Startseite).
 
-- 3 Wettbewerbe mit je 12 Aufgaben (4× leicht, 4× mittel, 4× schwer – von leicht nach schwer sortiert)
+- Klasse 9: 3 Wettbewerbe mit je 12 Aufgaben (4× leicht, 4× mittel, 4× schwer – von leicht nach schwer sortiert), max. 108 Punkte
+- Klasse 6: 3 Wettbewerbe mit je 10 Aufgaben (4× leicht, 3× mittel, 3× schwer), max. 87 Punkte
 - 35 Minuten pro Wettbewerb, die Uhr läuft ab dem Start weiter (auch bei geschlossener Seite)
 - Alle Aufgaben werden automatisch ausgewertet; Punkte und Lösungen gibt es erst nach der Abgabe bzw. nach Ablauf der Zeit
-- Punkte: leicht 6, mittel 9, schwer 12 (max. 108 pro Wettbewerb)
+- Punkte: leicht 6, mittel 9, schwer 12 
 - Kein Backend, keine Accounts: Antworten und Ergebnisse stehen nur im `localStorage` des Browsers
 
 ## Lokal starten
@@ -28,10 +29,11 @@ Das Skript prüft, dass jede Aufgabe eine gültige Beispiellösung hat, dass fal
 | --- | --- |
 | `js/algo.js` | Hilfsalgorithmen (Dijkstra, Max-Flow, Rucksack, BFS-Löser …) |
 | `js/widgets.js` | Antwort-Widgets (Auswahl, Roboter, Sortiernetzwerk, …) und SVG-Hilfen |
-| `js/tasks-1.js` … `tasks-3.js` | die drei Wettbewerbe |
+| `js/tasks-1.js` … `tasks-3.js` | die drei Wettbewerbe für Klasse 9 |
+| `js/tasks-k6.js` | die drei Wettbewerbe für Klasse 6 |
 | `js/app.js` | Ablauf, Timer, Speicherung, Ergebnisseite |
 
-Neue Aufgabe: in der passenden `tasks-*.js` ein Objekt mit `id`, `level`, `title`, `text`, `widget`, `explain`, `info` ergänzen und `node tests/verify.js` laufen lassen.
+Neue Aufgabe: in der passenden `tasks-*.js` (Klasse 6: `tasks-k6.js`, Wettbewerb mit `grade: 6`) ein Objekt mit `id`, `level`, `title`, `text`, `widget`, `explain`, `info` ergänzen und `node tests/verify.js` laufen lassen.
 
 ## Hinweis zu den Aufgaben
 

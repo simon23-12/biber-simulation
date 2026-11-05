@@ -6,7 +6,7 @@ const vm = require('vm');
 
 const ctx = { window: {}, console };
 vm.createContext(ctx);
-['algo', 'widgets', 'tasks-1', 'tasks-2', 'tasks-3'].forEach(f => {
+['algo', 'widgets', 'tasks-1', 'tasks-2', 'tasks-3', 'tasks-k6'].forEach(f => {
   // widgets.js nutzt document nur beim Rendern – für den Test reicht ein leerer Stub
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', f + '.js'), 'utf8'), ctx, { filename: f });
 });
@@ -34,13 +34,23 @@ const solutions = {
   'w2-12': c => c.correct,
   'w3-05': c => A.lightsSolve(c.n, c.start),
   'w3-09': c => A.pancakeSolve(c.start),
+  /* Klasse 6 */
+  'k1-01': c => A.robotSolve(c),
+  'k1-02': c => c.values.map(v => !!(c.target & v)),
+  'k1-05': c => c.target,
+  'k1-07': c => A.stackSolve(c.nums, c.ops, c.target, c.max),
+  'k1-09': c => A.knapsack(c.items, c.cap).set,
+  'k2-09': c => { const col = {}; (function rec(i) { if (i === c.nodes.length) return true; for (let k = 0; k < c.colors.length; k++) { col[c.nodes[i].id] = k; if (c.edges.every(([a, b]) => col[a] === undefined || col[b] === undefined || col[a] !== col[b]) && rec(i + 1)) return true; } delete col[c.nodes[i].id]; return false; })(0); return col; },
+  'k3-05': c => c.target,
+  'k3-06': c => c.correct,
 };
 
 let count = 0;
 B.contests.forEach(c => {
   console.log(`\n${c.title} – ${c.subtitle} (${c.tasks.length} Aufgaben)`);
   const levels = c.tasks.map(t => t.level).join('');
-  ok(levels === '111122223333', 'Schwierigkeitsreihenfolge 4×leicht, 4×mittel, 4×schwer: ' + levels);
+  const want = c.grade === 6 ? '1111222333' : '111122223333';
+  ok(levels === want, 'Schwierigkeitsreihenfolge ' + want + ': ' + levels);
   c.tasks.forEach(t => {
     count++;
     const w = W[t.widget.type], cfg = t.widget;
@@ -51,6 +61,7 @@ B.contests.forEach(c => {
     else if (cfg.type === 'number') ans = String([].concat(cfg.answer)[0]);
     else if (cfg.type === 'text') ans = cfg.answers[0];
     else if (cfg.type === 'seqclick') ans = cfg.correct;
+    else if (cfg.type === 'gridclick') ans = cfg.correct;
     else ans = null;
     ok(ans != null, t.id + ': keine Beispiellösung hinterlegt');
     ok(w.check(cfg, ans) === 1, t.id + ': Beispiellösung wird nicht akzeptiert');
@@ -103,6 +114,30 @@ ok(t9b.max === 4, 'w3-09: max = ' + t9b.max);
 const t11 = all.find(t => t.id === 'w2-11');
 ok(val(t11.explain).includes('<b>11</b>'), 'w2-11: erwarteter Fluss 11');
 const t12 = all.find(t => t.id === 'w3-12').widget; ok(t12.correct[0] === 2, 'w3-12: nur C ehrlich');
+
+/* Klasse 6 */
+const k = id => all.find(t => t.id === id);
+wrong('k1-01', ['U', 'U', 'R', 'R', 'U', 'R', 'U'], 'zu lang');
+wrong('k1-01', ['U', 'U', 'U', 'R', 'R', 'R'], 'Holz nicht eingesammelt');
+wrong('k1-02', [true, true, true, true, true], 'falsche Summe');
+wrong('k1-04', 'RAUN', 'falsches Wort');
+wrong('k1-07', ['5', '5', '×', '4', '+', '3'], 'zu lang');
+wrong('k1-10', '19', 'naiver Plan');
+wrong('k2-10', '16', 'falsche Zugzahl');
+wrong('k3-06', ['2', '4', '6', '1', '3', '5', '7'], 'falsche Reihenfolge');
+const k1_06 = k('k1-06').widget; ok(A.dijkstra([['S','A',3],['S','B',2],['A','B',1],['A','C',4],['B','C',6],['B','D',7],['C','D',2],['C','T',5],['D','T',3]], 'S', 'T').dist === k1_06.answer, 'k1-06: Weg');
+const kr = k('k1-01').widget; ok(A.robotSolve(kr).length === kr.max, 'k1-01: kürzester Weg ist nicht genau max');
+const ks = k('k1-07').widget; for (let m = 1; m < ks.max; m++) ok(A.stackSolve(ks.nums, ks.ops, ks.target, m) === null, 'k1-07: schon mit ' + m + ' Befehlen lösbar');
+ok(val(k('k1-08').explain).includes('Ben – Anna – Emma – Cleo – Dino') && k('k1-08').widget.correct[0] === 2, 'k1-08: Sitzordnung eindeutig, Platz 4 = Cleo');
+ok(k('k1-09').widget.items && A.knapsack(k('k1-09').widget.items, 10).best === 16, 'k1-09: bester Wert 16');
+ok(k('k2-08').widget.correct[0] === 1, 'k2-08: Berta');
+ok(k('k3-10').widget.answer === 6, 'k3-10: 6 Züge, ist ' + k('k3-10').widget.answer);
+ok(k('k3-06').widget.correct.join() === '2,4,6,1,5,3,7', 'k3-06: Ausscheiden ' + k('k3-06').widget.correct.join());
+ok(k('k3-01').widget.correct.join() === '2,4', 'k3-01: Endfeld ' + k('k3-01').widget.correct.join());
+ok(k('k3-09').widget.answer === 7, 'k3-09: 7 Tausche');
+ok(k('k2-03').widget.correct.join() === '3,5', 'k2-03: Schatz ' + k('k2-03').widget.correct.join());
+ok(k('k2-04').widget.answer === 33, 'k2-04: 33');
+ok(k('k2-02').widget.correct[0] === 2, 'k2-02: Grün');
 
 console.log(`\n${count} Aufgaben geprüft, ${fails} Fehler.`);
 process.exit(fails ? 1 : 0);
